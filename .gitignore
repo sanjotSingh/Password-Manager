@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules/
+
+# Environment variables file (if using .env)
+.env
+
+# Log files
+*.log
+
+# IDE or editor files
+.vscode/
+.idea/
+
+# Compiled binary files (if any)
+*.o
+*.out
+
+# Optional: OS generated files
+.DS_Store
+Thumbs.db

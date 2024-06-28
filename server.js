@@ -10,7 +10,7 @@ require('dotenv').config();
 const base32 = require('base32');
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 // Helmet for security headers
 app.use(helmet());
@@ -39,12 +39,17 @@ const cardSchema = new mongoose.Schema({
   username: String,
   password: {
     type: String,
-    set:function set(password) {
+    set: function(password) {
         try {
             console.log('A');
             
             // Ensure key is buffer and of correct length (32 bytes)
-            const key = '11111111111111111111111111111111'//process.env.ENCRYPTION_KEY;
+            const keyString = process.env.ENCRYPTION_KEY;
+            const key = Buffer.from(base32.decode(keyString));
+            console.log('Key Length:', keyString.length);
+            if (keyString.length !== 32) {
+                throw new Error('Key must be 32 bytes long for AES-256');
+            }
             console.log('B');
     
             // Generate a random 16-byte IV
@@ -52,18 +57,17 @@ const cardSchema = new mongoose.Schema({
             console.log('C');
     
             // Create a Cipher instance with AES-256-CBC, the key, and the IV
-            let cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+            const cipher = crypto.createCipheriv('aes-256-cbc', keyString, iv);
             console.log('D');
     
             // Encrypt the password
-            let encrypted = cipher.update(password, 'utf8');
+            let encrypted = cipher.update(password, 'utf8', 'hex');
+            console.log('D2');
+            encrypted += cipher.final('hex');
             console.log('E');
-            
-            encrypted = Buffer.concat([encrypted, cipher.final()]);
-            console.log('F');
     
             // Store IV and encrypted password in a format that can be decrypted
-            return `${iv.toString('hex')}:${encrypted.toString('hex')}`;
+            return `${iv.toString('hex')}:${encrypted}`;
         } catch (error) {
             console.error('Error during encryption:', error.message);
             return null;  // Or handle the error as needed
@@ -74,18 +78,26 @@ const cardSchema = new mongoose.Schema({
     get: function(encryptedPassword) {
       if (!encryptedPassword) return '';
 
-      const algorithm = 'aes-256-cbc';
-      const key = Buffer.from(process.env.ENCRYPTION_KEY, 'utf8'); // Use the same key used for encryption
+      try {
+        const keyString = process.env.ENCRYPTION_KEY;
+        const key = Buffer.from(base32.decode(keyString));
+        if (key.length !== 32) {
+            throw new Error('Key must be 32 bytes long for AES-256');
+        }
 
-      const parts = encryptedPassword.split(':');
-      const iv = Buffer.from(parts[0], 'hex');
-      const encrypted = parts[1];
+        const parts = encryptedPassword.split(':');
+        const iv = Buffer.from(parts[0], 'hex');
+        const encrypted = parts[1];
 
-      const decipher = crypto.createDecipheriv(algorithm, key, iv);
-      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
 
-      return decrypted;
+        return decrypted;
+      } catch (error) {
+          console.error('Error during decryption:', error.message);
+          return null;  // Or handle the error as needed
+      }
     }
   },
   internalIp: String,
@@ -148,7 +160,7 @@ app.put('/credentials/:id', async (req, res) => {
       return res.status(404).send('Credential not found');
     }
     // Ensure password is not sent back in response
-    updatedCard.password = undefined;
+    //updatedCard.password = undefined;
     res.json(updatedCard);
   } catch (error) {
     console.error(`Error updating card: ${error.message}`);
@@ -173,10 +185,11 @@ app.delete('/credentials/:id', async (req, res) => {
   }
 });
 
+
 // HTTPS server setup (replace with actual paths to your SSL/TLS certificates)
 const options = {
   key: process.env.PRIVATE_KEY, // Replace with actual path
-  cert: process.env.CERTIFICATE // Replace with actual path
+  cert: process.env.CERTIFICATE// Replace with actual path
 };
 
 https.createServer(options, app).listen(port, () => {

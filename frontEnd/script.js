@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
   // Fetch and display stored credentials
-  fetch('https://localhost:5000/credentials')
+  fetch('https://localhost:5000/api/cards')
     .then(response => response.json())
     .then(data => {
       // Sort data alphabetically by siteName
@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       });
     })
     .catch(error => console.error('Error fetching credentials:', error));
+
 
   // Function to open the modal for adding a new card
   window.openModal = function() {
@@ -41,7 +42,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const externalIp = document.getElementById('externalIp').value;
     const notes = document.getElementById('notes').value;
 
-    fetch('https://localhost:5000/credentials', {
+    fetch('https://localhost:5000/api/cards', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -131,7 +132,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   // Function to delete a card
   function deleteCard(id, cardElement) {
-    fetch(`https://localhost:5000/credentials/${id}`, {
+    fetch(`https://localhost:5000/api/cards/${id}`, {
       method: 'DELETE'
     })
     .then(response => {
@@ -170,7 +171,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const externalIp = document.getElementById('externalIp').value;
     const notes = document.getElementById('notes').value;
 
-    fetch(`https://localhost:5000/credentials/${id}`, {
+    fetch(`https://localhost:5000/api/cards/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'

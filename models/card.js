@@ -7,7 +7,6 @@ const cardSchema = new mongoose.Schema({
   password: {
     type: String,
     set: encrypt
-
   },
   internalIp: String,
   externalIp: String,

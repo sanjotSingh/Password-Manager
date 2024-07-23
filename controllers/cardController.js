@@ -6,7 +6,15 @@ exports.getCards = async (req, res) => {
     const cards = await cardService.getCards();
     const decryptedCards = cards.map(card => {
       const decryptedCard = card.toObject();
-      decryptedCard.password = decrypt(card.password);
+
+      // Decrypt each credential password
+      decryptedCard.credentials = decryptedCard.credentials.map(credential => {
+        return {
+          ...credential,
+          password: decrypt(credential.password)
+        };
+      });
+
       return decryptedCard;
     });
     res.json(decryptedCards);
@@ -14,6 +22,7 @@ exports.getCards = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
 
 exports.createCard = async (req, res) => {
   try {

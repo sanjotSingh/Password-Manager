@@ -2,672 +2,826 @@
 <!-- @noSnoop -->
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Vault</title>
-  <script type='text/javascript' src='/requirejs/config.js'></script>
-  <script type='text/javascript' src='/module/js/com/tridium/js/ext/require/require.min.js'></script>
-  <style>
-    body {
-      font-family: 'Roboto', Arial, sans-serif;
-      background-color: #f2f2f2;
-      padding: 20px;
-      margin: 0;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-around;
-    }
-
-    .card {
-      background-color: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin: 20px;
-      width: calc(33.33% - 40px);
-      flex: 1 0 auto;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .card h3 {
-      margin-top: 0;
-      color: #333;
-      font-size: 1.5rem;
-    }
-
-    .view-mode p {
-      margin: 10px 0;
-      display: flex;
-      align-items: center;
-      font-size: 1rem;
-      color: #555;
-    }
-
-    .view-mode .password-container {
-      display: flex;
-      align-items: center;
-    }
-
-    .toggle-password {
-      margin-left: 10px;
-      cursor: pointer;
-      font-size: 1.2rem;
-      color: #007bff;
-    }
-
-    .toggle-password:hover {
-      color: #0056b3;
-    }
-
-    .search-container {
-      max-width: 930px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .search-container input {
-      flex: 1;
-      padding: 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-right: 10px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .search-container input:focus {
-      border-color: #007bff;
-    }
-
-    .add-btn {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .logout-btn {
-      background-color: gray;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-left: 10px;
-      transition: background-color 0.2s;
-    }
-
-    .add-btn:hover {
-      background-color: #0056b3;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .modal-content {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      width: 80%;
-      margin: auto;
-      max-width: 500px;
-      animation: slide-down 0.3s ease-out;
-    }
-
-    @keyframes slide-down {
-      from {
-        transform: translateY(-20%);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    .field {
-      margin-bottom: 15px;
-    }
-
-    .field label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
-      color: #333;
-    }
-
-    .field input, .field textarea {
-      width: calc(100% - 16px);
-      padding: 8px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin: 5px 0;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .field input:focus, .field textarea:focus {
-      border-color: #007bff;
-    }
-
-    .save-btn, .cancel-btn {
-      background-color: #28a745;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-right: 10px;
-    }
-
-    .cancel-btn {
-      background-color: #dc3545;
-    }
-
-    .save-btn:hover {
-      background-color: #218838;
-    }
-
-    .cancel-btn:hover {
-      background-color: #c82333;
-    }
-
-    .edit-btn {
-      background-color: #06B131;
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .edit-btn:hover {
-      background-color: #138496;
-    }
-
-    .delete-btn {
-      background-color: #D02536;
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-left: 10px;
-    }
-
-    .delete-btn:hover {
-      background-color: #c82333;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 800px) {
-      .card {
-        width: calc(50% - 40px);
-      }
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
-      .card {
-        width: calc(100% - 40px);
-        margin: 10px;
-      }
-      .field input, .field textarea {
-        font-size: 0.9rem;
-      }
-      .save-btn, .add-btn, .cancel-btn, .edit-btn, .delete-btn {
-        font-size: 0.9rem;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Cards</title>
+<script type='text/javascript' src='/requirejs/config.js'></script>
+<script type='text/javascript' src='/module/js/com/tridium/js/ext/require/require.min.js'></script>
 </head>
 <body>
-  <div class="search-container">
+<div class="search-container">
     <input type="text" id="searchInput" placeholder="Search...">
-    <button class="add-btn" onclick="openModal()">Add Card</button>
+    <button id="addCardButton">Add Card</button>
     <button class="logout-btn" onclick="window.location.href='https://intechautomation.com/logoutConfirm';">Logout</button>
-  </div>
-  <div class="container" id="cardContainer"></div>
+</div>
+<div class="container">
+  <!-- Container for cards -->
+</div>
 
-  <div id="myModal" class="modal">
-    <div class="modal-content">
+<!-- Modal for adding or editing a card -->
+<div id="cardModal" class="modal">
+  <div class="modal-content">
+    <div id="cardForm">
       <h2>Add New Card</h2>
-      <form id="addForm">
-        <div class="field">
-          <label for="siteName">Site Name:</label>
-          <input type="text" id="siteName" required>
-        </div>
-        <div class="field">
-          <label for="username">Username:</label>
-          <input type="text" id="username" autocomplete="off">
-        </div>
-        <div class="field">
-          <label for="password">Password:</label>
-          <input type="password" id="password" autocomplete="new-password">
-        </div>
-        <div class="field">
-          <label for="internalIp">Internal IP:</label>
-          <input type="text" id="internalIp">
-        </div>
-        <div class="field">
-          <label for="externalIp">External IP:</label>
-          <input type="text" id="externalIp">
-        </div>
-        <div class="field">
-          <label for="notes">Notes:</label>
-          <textarea id="notes" rows="4"></textarea>
-        </div>
-        <button type="button" class="save-btn" onclick="addCard()">Save</button>
-        <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+      <form id="newCardForm">
+        <label for="siteName">Site Name:</label>
+        <input type="text" id="siteName" name="siteName" required><br>
+
+        <label for="internalIP">Internal IP:</label>
+        <input type="text" id="internalIP" name="internalIP" required><br>
+
+        <label for="externalIP">External IP:</label>
+        <input type="text" id="externalIP" name="externalIP" required><br>
+
+        <label for="notes">Notes:</label>
+        <textarea id="notes" name="notes" required></textarea><br>
+
+        <div id="credentials"></div>
+        <button type="button" id="addCredentialButton">Add Another Credential</button><br><br>
+
+        <button type="button" id="submitButton">Save</button>
+        <button type="button" id="cancelButton">Cancel</button>
+        <button type="button" id="deleteCardButton">Delete</button>
+        
       </form>
     </div>
   </div>
+</div>
 
-  <script>
+<style>
+*, button, input {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+}
+
+:root {
+  --bg-shape-color: linear-gradient(120deg, #343A4F, #0F1620);
+  --lightblue: #3D9DEA;
+  --darkblue: #4A4EEE;
+  --text-color: #D5E1EF;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  background-image: linear-gradient(90deg, #414850, #131720);
+  color: var(--text-color);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 20px 0px;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 930px;
+  margin-bottom: 20px;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  padding: 40px 0px;
+}
+
+.wrapper {
+  width: 350px;
+  border-radius: 40px;
+  background-image: var(--bg-shape-color);
+  overflow: auto;
+  margin: 18px;
+  min-width: 350px;
+  position: relative;
+}
+
+.overviewInfo, .productSpecifications {
+  padding: 24px;
+}
+
+.overviewInfo {
+  background-image: linear-gradient(176deg, var(--lightblue), var(--darkblue));
+}
+
+.productinfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  min-height: 200px;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-family: 'Michroma', sans-serif;
+}
+
+.grouptext h3 {
+  letter-spacing: 3.2px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+
+.grouptext p {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.grouptext a {
+  color: var(--text-color);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.featureIcon {
+  width: 40px;
+  height: 40px;
+  background-image: var(--bg-shape-color);
+  border-radius: 8px;
+  margin-right: 16px;
+
+  position: relative;
+  display: inline-block;
+}
+
+.productSpecifications h1 {
+  margin-top: -10px;
+  margin-bottom: 16px;
+  font-size: 32px;
+}
+
+.productSpecifications p {
+  opacity: 0.8;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.productFeatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 20px;
+  grid-row-gap: 16px;
+}
+
+.feature {
+  display: flex;
+}
+
+#addCardButton {
+  background-color: var(--lightblue);
+  border: none;
+  color: var(--text-color);
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 20px 0;
+}
+
+#addCardButton:hover {
+  background-color: var(--darkblue);
+}
+
+#cardForm {
+  background-color: var(--bg-shape-color);
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+  color: var(--text-color);
+}
+
+#cardForm h2 {
+  margin-bottom: 10px;
+}
+
+#cardForm label {
+  display: block;
+  margin: 10px 0 5px;
+}
+
+#cardForm input[type="text"],
+#cardForm textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 5px;
+}
+
+#cardForm textarea {
+  resize: none;
+  height: 60px;
+}
+
+#addCredentialButton, #cancelButton, #submitButton {
+  background-color: var(--lightblue);
+  border: none;
+  color: var(--text-color);
+  padding: 5px 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+#addCredentialButton:hover, #cancelButton:hover, #submitButton:hover {
+  background-color: var(--darkblue);
+}
+
+.editCardButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: var(--lightblue);
+  border: none;
+  color: var(--text-color);
+  padding: 5px 5px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.editCardButton:hover {
+  background-color: var(--darkblue);
+}
+
+/* Modal styles */
+.modal {
+  display: none; 
+  position: fixed; 
+  z-index: 1; 
+  left: 0; 
+  top: 0; 
+  width: 100%; 
+  height: 100%; 
+  overflow: auto; 
+  background-color: rgba(0,0,0,0.4); 
+}
+
+.modal-content {
+  background-color: var(--bg-shape-color);
+  margin: 15% auto; 
+  padding: 20px; 
+  border: 1px solid #888; 
+  width: 80%; 
+  max-width: 500px; 
+  border-radius: 10px;
+  background-color: rgb(0,0,0); 
+
+}
+
+#deleteCardButton, .deleteCredentialButton {
+  background-color: #E53935; /* Red color for delete buttons */
+  border: none;
+  color: var(--text-color);
+  padding: 5px 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+#deleteCardButton:hover, .deleteCredentialButton:hover {
+  background-color: #D32F2F;
+}
+.tooltiptext {
+  visibility: hidden;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 2;
+  bottom: 125%; /* Position the tooltip above the text */
+  left: auto;
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap; /* Prevent text from wrapping */
+}
+
+
+.featureIcon:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+
+
+.search-container input {
+  flex: 1;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-right: 10px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-container input:focus {
+  border-color: #007bff;
+}
+
+.logout-btn {
+  background-color: gray;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.2s;
+}
+
+</style>
+
+<script>
+
 document.addEventListener('DOMContentLoaded', (event) => {
     // Fetch and display stored credentials
     loadCards()
-        .then(data => {
-            // Ensure data is an array
-            if (Array.isArray(data)) {
-                //Sorting data alphabetically by siteName
-                data.sort((a, b) => a.siteName.localeCompare(b.siteName));
-                data.forEach(card => {
-                    displayCard(card);
-                });
-            } else {
-                console.error('Fetched data is not an array:', data);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching card data:', error);
-        });
+    .then(data => {
+        // Ensure data is an array
+        if (Array.isArray(data)) {
+            //Sorting data alphabetically by siteName
+            data.sort((a, b) => a.siteName.localeCompare(b.siteName));
+            data.forEach(card => {
+                displayCard(card);
+            });
+        } else {
+            console.error('Fetched data is not an array:', data);
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching card data:', error);
+    })
+});
 
-    function loadCards() {
-        return new Promise((resolve, reject) => {
-            require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
-                "use strict";
 
-                // Assuming you fetch data using baja!
-                baja.Ord.make('station:|slot:/Apps/TestBlock/getHTTP/out').get({
+//add card Button
+document.getElementById('addCardButton').addEventListener('click', function() {
+  document.getElementById('cardModal').style.display = 'block';
+  document.getElementById('newCardForm').reset();
+  document.getElementById('submitButton').innerText = 'Save';
+  document.getElementById('submitButton').dataset.mode = 'add';
+  const credentialsDiv = document.getElementById('credentials');
+  credentialsDiv.innerHTML = '';
+  document.getElementById('deleteCardButton').style.display = 'none';
+});
+//cancel button
+document.getElementById('cancelButton').addEventListener('click', function() {
+  document.getElementById('cardModal').style.display = 'none';
+});
+//add credential
+document.getElementById('addCredentialButton').addEventListener('click', function() {
+  const credentialsDiv = document.getElementById('credentials');
+  const newCredentialDiv = document.createElement('div');
+  newCredentialDiv.classList.add('credential');
+  newCredentialDiv.innerHTML = `
+    <label>Credentials:</label>
+    <input type="text" name="credentialType" placeholder="Type" required>
+    <input type="text" name="credentialValue" placeholder="Username" required>
+    <input type="text" name="credentialPassword" placeholder="Password" required>
+    <button type="button" class="deleteCredentialButton">Delete</button><br><br>
+  `;
+  credentialsDiv.appendChild(newCredentialDiv);
+
+  newCredentialDiv.querySelector('.deleteCredentialButton').addEventListener('click', function() {
+    newCredentialDiv.remove();
+  });
+});
+//edit button, J
+document.addEventListener('click', function(event) {
+  if (event.target && event.target.classList.contains('editCardButton')) {
+    console.log('edit button clicked');
+    const card = event.target.parentElement;
+    const cardId = card.getAttribute('id').split('-')[1]; // Extract the id part after 'card-'
+
+    document.getElementById('cardModal').style.display = 'block';
+    document.getElementById('submitButton').innerText = 'Save';
+    document.getElementById('submitButton').dataset.mode = 'edit';
+    document.getElementById('submitButton').dataset.cardId = cardId;
+    document.getElementById('deleteCardButton').style.display = 'inline-block';
+
+    const siteName      = card.querySelector('.grouptext:nth-child(1) h1').innerText;
+    const internalIp    = card.querySelector('.grouptext:nth-child(2) p a').innerText;
+    const externalIp    = card.querySelector('.grouptext:nth-child(3) p a').innerText;
+    const notes         = card.querySelector('.grouptext:nth-child(3) p').innerText;
+    console.log(siteName, internalIp, externalIp, notes);
+    const credentialList = [];
+    document.getElementById('siteName').value = siteName;
+    document.getElementById('internalIP').value = internalIp;
+    document.getElementById('externalIP').value = externalIp;
+    document.getElementById('notes').value = notes;
+
+    const credentialsDiv = document.getElementById('credentials');
+    credentialsDiv.innerHTML = '';
+
+    const credentials = card.querySelectorAll('.productFeatures .feature');
+    credentials.forEach(credential => {
+      const credentialType = credential.querySelector('.featureText p strong').innerText;
+      const credentialValue = credential.querySelector('.featureText p:nth-child(2)').innerText;
+      const credentialPassword = credential.querySelector(".featureIcon .tooltiptext").textContent; // Ensure correct selector
+      const credentialObj = {
+        type: credentialType,
+        value: credentialValue,
+        password: credentialPassword
+      };
+
+      credentialList.push(credentialObj);
+
+      const newCredentialDiv = document.createElement('div');
+      newCredentialDiv.classList.add('credential');
+      newCredentialDiv.innerHTML = `
+        <label>Credentials:</label>
+        <input type="text" name="credentialType" value="${credentialType}" required>
+        <input type="text" name="credentialValue" value="${credentialValue}" required>
+        <input type="text" name="credentialPassword" value="${credentialPassword}" required>
+        <button type="button" class="deleteCredentialButton">Delete</button><br><br>
+      `;
+      credentialsDiv.appendChild(newCredentialDiv);
+
+      
+
+      newCredentialDiv.querySelector('.deleteCredentialButton').addEventListener('click', function() {
+        newCredentialDiv.remove();
+      });
+      
+
+    });
+  }
+});
+//Save button J
+document.getElementById('submitButton').addEventListener('click', function(event) {
+  event.preventDefault();
+
+  const siteName = document.getElementById('siteName').value;
+  const internalIP = document.getElementById('internalIP').value;
+  const externalIP = document.getElementById('externalIP').value;
+  const notes = document.getElementById('notes').value;
+
+  const credentialTypes = document.getElementsByName('credentialType');
+  const credentialValues = document.getElementsByName('credentialValue');
+  const credentialPasswords = document.getElementsByName('credentialPassword');
+  const credentials = [];
+
+  const credentialList = [];
+  for (let i = 0; i < credentialTypes.length; i++) {
+    console.log(credentialTypes[i].value, credentialValues[i].value, credentialPasswords[i].value);
+    credentials.push({
+      type: credentialTypes[i].value,
+      value: credentialValues[i].value,
+      password: credentialPasswords[i].value
+    });
+  }
+  const jsonString = JSON.stringify({siteName, internalIP, externalIP, notes, credentials});
+  console.log("Add Creds: "+ jsonString);
+  const mode = document.getElementById('submitButton').dataset.mode;
+
+  if (mode === 'add') {
+    const newWrapper = document.createElement('div');
+    newWrapper.classList.add('wrapper');
+    newWrapper.id = 'card-' + Date.now();
+
+    let credentialsHtml = '';
+    credentials.forEach(credential => {
+        //console.log(credential);
+      credentialsHtml += `
+        <div class="feature">
+          <div class="featureIcon"><span class="tooltiptext">${credential.password}</span></div>
+          <div class="featureText">
+            <p><strong>${credential.type}</strong></p>
+            <p>${credential.value}</p>
+          </div>
+        </div>
+      `;
+
+    });
+
+    newWrapper.innerHTML = `
+      <button class="editCardButton" id="editCardButton">Edit</button>
+      <div class="overviewInfo"> 
+        <div class="productinfo">
+          <div class="grouptext">
+            <h1>${siteName}</h1>
+          </div>
+          <div class="grouptext">
+            <h3>Internal IP</h3>
+            <p><a href="https://${internalIP}" target="_blank" rel="noopener noreferrer">${internalIP}</a></p>
+          </div>
+          <div class="grouptext">
+            <h3>External IP</h3>
+            <p><a href="https://${externalIP}" target="_blank" rel="noopener noreferrer">${externalIP}</a></p>
+          </div>
+          <div class="grouptext">
+            <h3>Notes</h3>
+            <p>${notes}</p>
+          </div>
+        </div>
+      </div> 
+      <div class="productSpecifications">
+        <h1>Credentials</h1>    
+        <div class="productFeatures">
+          ${credentialsHtml}
+        </div>
+      </div>
+    `;
+
+
+    document.querySelector('.container').appendChild(newWrapper);
+    postCard(jsonString);
+
+  } else if (mode === 'edit') {
+    const cardToEdit = document.getElementById('submitButton').dataset.cardId;
+    const card = document.getElementById('card-' + cardToEdit);
+    card.querySelector('.grouptext:nth-child(1) h1').innerText = siteName;
+    card.querySelector('.grouptext:nth-child(2) p a').innerText = internalIP;
+    card.querySelector('.grouptext:nth-child(2) p a').href = internalIP;
+    card.querySelector('.grouptext:nth-child(3) p a').innerText = externalIP;
+    card.querySelector('.grouptext:nth-child(3) p a').href = externalIP;
+    card.querySelector('.grouptext:nth-child(4) p').innerText = notes;
+
+    let credentialsHtml = '';
+    credentials.forEach(credential => {
+      credentialsHtml += `
+        <div class="feature">
+          <div class="featureIcon"><span class="tooltiptext">${credential.password}</span></div>
+          <div class="featureText">
+            <p><strong>${credential.type}</strong></p>
+            <p>${credential.value}</p>
+          </div>
+        </div>
+      `;
+    });
+
+    card.querySelector('.productFeatures').innerHTML = credentialsHtml;
+    updateCard(jsonString, cardToEdit);
+  }
+
+  document.getElementById('cardModal').style.display = 'none';
+  document.getElementById('newCardForm').reset();
+  const credentialsDiv = document.getElementById('credentials');
+  credentialsDiv.innerHTML = '';
+  sortCards();
+});
+
+//Delete button J
+document.getElementById('deleteCardButton').addEventListener('click', function() {
+  const cardToDelete = document.getElementById('submitButton').dataset.cardId;
+  const card = document.getElementById('card-' + cardToDelete);
+  card.remove();
+  document.getElementById('cardModal').style.display = 'none';
+  deleteCard(cardToDelete);
+});
+
+
+//Search Bar
+document.getElementById('searchInput').addEventListener('input', function() {
+  const query = this.value.toLowerCase();
+  const cards = document.querySelectorAll('.wrapper');
+  
+  cards.forEach(card => {
+    const siteName = card.querySelector('.overviewInfo .grouptext h1')?.textContent.toLowerCase();
+    if (siteName.includes(query)) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+});
+
+function postCard(cardData) {
+    return new Promise((resolve, reject) => {
+        require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
+            "use strict";
+
+            // Initialize counter as undefined initially
+            var counter;
+
+            baja.Ord.make("station:|slot:/Apps/TestBlock/postHTTP/dataIn")
+                .get({
                     lease: true, // Temporarily subscribe the Counter for one minute.
                     leaseTime: baja.RelTime.make({
                         minutes: 1
                     })
                 })
-                .then(function(ramp) {
-                    return ramp.getParent().invoke({
-                            slot: "refresh"
+                .then(function(point) {
+                    counter = point; // Assign the fetched point to counter
+                    // Set value using cardData
+                    counter.setValue(cardData);
+                    // Invoke refresh and return the promise to ensure it completes before proceeding
+                    return counter.getParent().invoke({
+                        slot: "refresh"
+                    });
+                })
+                .then(function() {
+                    //location.reload();
+                    resolve(cardData); // Resolve with cardData after refresh completes
+                })
+                .catch(function(error) {
+                    reject(error); // Reject if any error occurs
+                });
+        });
+    });
+}
+function updateCard(cardData, id) {
+    return new Promise((resolve, reject) => {
+        require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
+            "use strict";
+
+            // Initialize counter as undefined initially
+            var counter;
+
+
+            baja.Ord.make("station:|slot:/Apps/TestBlock/putHTTP/dataIn")
+                .get({
+                    lease: true, // Temporarily subscribe the Counter for one minute.
+                    leaseTime: baja.RelTime.make({
+                        minutes: 1
                     })
-                    .then(function() {
-                        var rampData = ramp.getValue();
-                        // Assuming rampData is already in JSON format or needs JSON parsing
-                        try {
-                        // Check if rampData is a string and parse it
-                        const jsonData = typeof rampData === 'string' ? JSON.parse(rampData) : rampData;
-                        resolve(jsonData);
-                        } catch (error) {
-                            reject(error); // Reject if parsing fails
-                        }
+                })
+                .then(function(point) {
+                    counter = point; // Assign the fetched point to counter
+                    // Assuming getIn10() is a method on the fetched point
+                    return counter.setValue(cardData);
+                })
+                .then(function() {
+                    resolve(cardData);
+                })
+                .catch(function(error) {
+                    reject(error);
+                });
+            baja.Ord.make("station:|slot:/Apps/TestBlock/putHTTP/Url")
+                .get({
+                    lease: true, // Temporarily subscribe the Counter for one minute.
+                    leaseTime: baja.RelTime.make({
+                        minutes: 1
+                    })
+                })
+                .then(function(point) {
+                    counter = point; // Assign the fetched point to counter
+                    // Assuming getIn10() is a method on the fetched point
+                    counter.setValue(`https://localhost:5000/api/cards/${id}`);
+                    // Invoke refresh and return the promise to ensure it completes before proceeding
+                    return counter.getParent().invoke({
+                        slot: "refresh"
+                    });
+                })
+                .then(function() {
+                    location.reload();
+                    resolve(cardData);
+                })
+                .catch(function(error) {
+                    reject(error);
+                });
+
+
+        });
+    });
+}
+
+function deleteCard(id) {
+    return new Promise((resolve, reject) => {
+        require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
+            "use strict";
+
+            // Initialize counter as undefined initially
+            var counter;
+
+            baja.Ord.make("station:|slot:/Apps/TestBlock/deleteHTTP/Url")
+                .get({
+                    lease: true, // Temporarily subscribe the Counter for one minute.
+                    leaseTime: baja.RelTime.make({
+                        minutes: 1
+                    })
+                })
+                .then(function(point) {
+                    counter = point; // Assign the fetched point to counter
+                    // Assuming getIn10() is a method on the fetched point
+                    counter.setValue(`https://localhost:5000/api/cards/${id}`); // Set value using cardData
+                    counter.getParent().invoke({
+                        slot: "refresh"
                     });
                 })
                 .catch(function(error) {
-                    console.error("Error loading card data:", error);
-                    reject(error); // Reject the promise with the error
+                    reject(error);
                 });
-            });
         });
-    }
-    function displayCard(card) {
-        const cardContainer = document.getElementById('cardContainer');
+    });
+}
 
-        const cardElement = document.createElement('div');
-        cardElement.className = 'card';
+function loadCards() {
+  return new Promise((resolve, reject) => {
+    require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
+        "use strict";
 
-        const siteNameElement = document.createElement('h3');
-        siteNameElement.textContent = card.siteName;
-        cardElement.appendChild(siteNameElement);
-
-        const usernameElement = document.createElement('p');
-        usernameElement.textContent = `Username: ${card.username}`;
-        cardElement.appendChild(usernameElement);
-
-        const passwordElement = document.createElement('p');
-        const passwordContainer = document.createElement('span');
-        passwordContainer.className = 'password-container';
-        const passwordText = document.createElement('span');
-        passwordText.textContent = `Password: ${'•'.repeat(card.password.length)}`;
-
-        passwordContainer.appendChild(passwordText);
-
-        const togglePasswordButton = document.createElement('span');
-        togglePasswordButton.className = 'toggle-password';
-        togglePasswordButton.innerHTML = '🙈'; // eye icon
-
-        togglePasswordButton.addEventListener('click', () => {
-            if (passwordText.textContent === `Password: ${card.password}`) {
-                passwordText.textContent = `Password: ${'•'.repeat(card.password.length)}`;
-                togglePasswordButton.innerHTML = '🙈'; // show eye icon
-            } else {
-                passwordText.textContent = `Password: ${card.password}`;
-                togglePasswordButton.innerHTML = '🙉'; // hide eye icon
-            }
-        });
-
-        passwordContainer.appendChild(togglePasswordButton);
-        passwordElement.appendChild(passwordContainer);
-
-        cardElement.appendChild(passwordElement);
-
-        const internalIpElement = document.createElement('p');
-        internalIpElement.textContent = `Internal IP: ${card.internalIp}`;
-        cardElement.appendChild(internalIpElement);
-
-        const externalIpElement = document.createElement('p');
-        externalIpElement.textContent = `External IP: ${card.externalIp}`;
-        cardElement.appendChild(externalIpElement);
-
-        const notesElement = document.createElement('p');
-        notesElement.textContent = `Notes: ${card.notes}`;
-        cardElement.appendChild(notesElement);
-
-        const editButton = document.createElement('button');
-        editButton.className = 'edit-btn';
-        editButton.textContent = 'Edit';
-        editButton.addEventListener('click', () => {
-            openEditModal(card);
-        });
-        cardElement.appendChild(editButton);
-
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'delete-btn';
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', () => {
-            deleteCard(card._id, cardElement);
-        });
-        cardElement.appendChild(deleteButton);
-
-        cardContainer.appendChild(cardElement);
-    }
-    function openEditModal(card) {
-        const modal = document.getElementById('myModal');
-        document.getElementById('siteName').value = card.siteName;
-        document.getElementById('username').value = card.username;
-        document.getElementById('password').value = card.password;
-        document.getElementById('internalIp').value = card.internalIp;
-        document.getElementById('externalIp').value = card.externalIp;
-        document.getElementById('notes').value = card.notes;
-
-        const saveButton = document.querySelector('.save-btn');
-        saveButton.textContent = 'Update';
-        saveButton.onclick = () => updateCard(card._id);
-
-        modal.style.display = 'flex';
-    }
-    window.openModal = function() {
-        const modal = document.getElementById('myModal');
-
-        // Reset form fields
-        document.getElementById('siteName').value = '';
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        document.getElementById('internalIp').value = '';
-        document.getElementById('externalIp').value = '';
-        document.getElementById('notes').value = '';
-
-        modal.style.display = 'flex';
-    };
-    window.closeModal = function() {
-        const modal = document.getElementById('myModal');
-        modal.style.display = 'none';
-    };
-    window.addCard = function() {
-        const siteName = document.getElementById('siteName').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const internalIp = document.getElementById('internalIp').value;
-        const externalIp = document.getElementById('externalIp').value;
-        const notes = document.getElementById('notes').value;
-        postCard(JSON.stringify({
-                siteName,
-                username,
-                password,
-                internalIp,
-                externalIp,
-                notes
-            }))
-            .then(updatedCard => {
-                // Update the card in the DOM
-                const cardElements = document.querySelectorAll('.card');
-                cardElements.forEach(cardElement => {
-                    if (cardElement.querySelector('h3').textContent === updatedCard.siteName) {
-                        cardElement.querySelector('p:nth-child(2)').textContent = `Username: ${updatedCard.username}`;
-                        cardElement.querySelector('.password-container span').textContent = updatedCard.password;
-                        cardElement.querySelector('p:nth-child(4)').textContent = `Internal IP: ${updatedCard.internalIp}`;
-                        cardElement.querySelector('p:nth-child(5)').textContent = `External IP: ${updatedCard.externalIp}`;
-                        cardElement.querySelector('p:nth-child(6)').textContent = `Notes: ${updatedCard.notes}`;
-                    }
-                });
-                closeModal();
+        // Assuming you fetch data using baja!
+        baja.Ord.make('station:|slot:/Apps/TestBlock/getHTTP/out').get({
+            lease: true, // Temporarily subscribe the Counter for one minute.
+            leaseTime: baja.RelTime.make({
+                minutes: 1
             })
-            .catch(error => console.error('Error updating card:', error));
-    };
-    function postCard(cardData) {
-        return new Promise((resolve, reject) => {
-            require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
-                "use strict";
-
-                // Initialize counter as undefined initially
-                var counter;
-
-                baja.Ord.make("station:|slot:/Apps/TestBlock/postHTTP/dataIn")
-                    .get({
-                        lease: true, // Temporarily subscribe the Counter for one minute.
-                        leaseTime: baja.RelTime.make({
-                            minutes: 1
-                        })
-                    })
-                    .then(function(point) {
-                        counter = point; // Assign the fetched point to counter
-                        // Set value using cardData
-                        counter.setValue(cardData);
-                        // Invoke refresh and return the promise to ensure it completes before proceeding
-                        return counter.getParent().invoke({
-                            slot: "refresh"
-                        });
-                    })
-                    .then(function() {
-                        location.reload();
-                        resolve(cardData); // Resolve with cardData after refresh completes
-                    })
-                    .catch(function(error) {
-                        reject(error); // Reject if any error occurs
-                    });
-            });
-        });
-    }
-    function postUpdatedCard(cardData, id) {
-        return new Promise((resolve, reject) => {
-            require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
-                "use strict";
-
-                // Initialize counter as undefined initially
-                var counter;
-
-
-                baja.Ord.make("station:|slot:/Apps/TestBlock/putHTTP/dataIn")
-                    .get({
-                        lease: true, // Temporarily subscribe the Counter for one minute.
-                        leaseTime: baja.RelTime.make({
-                            minutes: 1
-                        })
-                    })
-                    .then(function(point) {
-                        counter = point; // Assign the fetched point to counter
-                        // Assuming getIn10() is a method on the fetched point
-                        return counter.setValue(cardData);
-                    })
-                    .then(function() {
-                        resolve(cardData);
-                    })
-                    .catch(function(error) {
-                        reject(error);
-                    });
-                baja.Ord.make("station:|slot:/Apps/TestBlock/putHTTP/Url")
-                    .get({
-                        lease: true, // Temporarily subscribe the Counter for one minute.
-                        leaseTime: baja.RelTime.make({
-                            minutes: 1
-                        })
-                    })
-                    .then(function(point) {
-                        counter = point; // Assign the fetched point to counter
-                        // Assuming getIn10() is a method on the fetched point
-                        counter.setValue(`https://localhost:5000/api/cards/${id}`);
-                        // Invoke refresh and return the promise to ensure it completes before proceeding
-                        return counter.getParent().invoke({
-                            slot: "refresh"
-                        });
-                    })
-                    .then(function() {
-                        location.reload();
-                        resolve(cardData);
-                    })
-                    .catch(function(error) {
-                        reject(error);
-                    });
-
-
-            });
-        });
-    }
-    function updateCard(id) {
-        const siteName = document.getElementById('siteName').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const internalIp = document.getElementById('internalIp').value;
-        const externalIp = document.getElementById('externalIp').value;
-        const notes = document.getElementById('notes').value;
-
-        postUpdatedCard(JSON.stringify({
-            siteName,
-            username,
-            password,
-            internalIp,
-            externalIp,
-            notes
-        }), id)
-        .then(updatedCard => {
-            // Update the card in the DOM
-            const cardElements = document.querySelectorAll('.card');
-            cardElements.forEach(cardElement => {
-                if (cardElement.querySelector('h3').textContent === updatedCard.siteName) {
-                    cardElement.querySelector('p:nth-child(2)').textContent = `Username: ${updatedCard.username}`;
-                    cardElement.querySelector('.password-container span').textContent = updatedCard.password;
-                    cardElement.querySelector('p:nth-child(4)').textContent = `Internal IP: ${updatedCard.internalIp}`;
-                    cardElement.querySelector('p:nth-child(5)').textContent = `External IP: ${updatedCard.externalIp}`;
-                    cardElement.querySelector('p:nth-child(6)').textContent = `Notes: ${updatedCard.notes}`;
+        })
+        .then(function(ramp) {
+            return ramp.getParent().invoke({
+                    slot: "refresh"
+            })
+            .then(function() {
+                var rampData = ramp.getValue();
+                // Assuming rampData is already in JSON format or needs JSON parsing
+                try {
+                // Check if rampData is a string and parse it
+                const jsonData = typeof rampData === 'string' ? JSON.parse(rampData) : rampData;
+                resolve(jsonData);
+                } catch (error) {
+                    reject(error); // Reject if parsing fails
                 }
             });
-
-            closeModal();
         })
-        .catch(error => console.error('Error updating card:', error));
-    }
-    function deleteCard(id, cardElement) {
-        return new Promise((resolve, reject) => {
-            require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
-                "use strict";
-
-                // Initialize counter as undefined initially
-                var counter;
-
-                baja.Ord.make("station:|slot:/Apps/TestBlock/deleteHTTP/Url")
-                    .get({
-                        lease: true, // Temporarily subscribe the Counter for one minute.
-                        leaseTime: baja.RelTime.make({
-                            minutes: 1
-                        })
-                    })
-                    .then(function(point) {
-                        counter = point; // Assign the fetched point to counter
-                        // Assuming getIn10() is a method on the fetched point
-                        counter.setValue(`https://localhost:5000/api/cards/${id}`); // Set value using cardData
-                        counter.getParent().invoke({
-                            slot: "refresh"
-                        });
-                    })
-                    .then(function() {
-                        cardElement.remove();
-                    })
-                    .catch(function(error) {
-                        reject(error);
-                    });
-            });
+        .catch(function(error) {
+            console.error("Error loading card data:", error);
+            reject(error); // Reject the promise with the error
         });
-    }
-
-    
-});
-document.getElementById('searchInput').addEventListener('input', function() {
-    const searchValue = this.value.toLowerCase();
-    const cards = document.querySelectorAll('.card');
-
-    cards.forEach(card => {
-        const cardTitle = card.querySelector('h3').textContent.toLowerCase();
-        const viewModeElements = card.querySelectorAll('.view-mode');
-
-        let viewModeText = '';
-        viewModeElements.forEach(element => {
-            viewModeText += element.textContent.toLowerCase();
-        });
-
-        if (cardTitle.includes(searchValue) || viewModeText.includes(searchValue)) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
     });
-});
+  });
+}
 
-  </script>
+function displayCard(card) {
+    const siteName = card.siteName;
+    const internalIP = card.internalIP;
+    const externalIP = card.externalIP;
+    const notes = card.notes;
+    const credentials = card.credentials;
+    const credentialList = [];
+    for (let i = 0; i < card.credentials.length; i++) {
+
+    }
+    const newWrapper = document.createElement('div');
+    newWrapper.classList.add('wrapper');
+    newWrapper.id = 'card-' + Date.now();
+
+    let credentialsHtml = '';
+    credentials.forEach(credential => {
+        //console.log(credential);
+      credentialsHtml += `
+        <div class="feature">
+          <div class="featureIcon"><span class="tooltiptext">${credential.password}</span></div>
+          <div class="featureText">
+            <p><strong>${credential.type}</strong></p>
+            <p>${credential.value}</p>
+          </div>
+        </div>
+      `;
+
+    });
+
+    newWrapper.innerHTML = `
+      <button class="editCardButton" id="editCardButton">Edit</button>
+      <div class="overviewInfo"> 
+        <div class="productinfo">
+          <div class="grouptext">
+            <h1>${siteName}</h1>
+          </div>
+          <div class="grouptext">
+            <h3>Internal IP</h3>
+            <p><a href="https://${internalIP}" target="_blank" rel="noopener noreferrer">${internalIP}</a></p>
+          </div>
+          <div class="grouptext">
+            <h3>External IP</h3>
+            <p><a href="https://${externalIP}" target="_blank" rel="noopener noreferrer">${externalIP}</a></p>
+          </div>
+          <div class="grouptext">
+            <h3>Notes</h3>
+            <p>${notes}</p>
+          </div>
+        </div>
+      </div> 
+      <div class="productSpecifications">
+        <h1>Credentials</h1>    
+        <div class="productFeatures">
+          ${credentialsHtml}
+        </div>
+      </div>
+    `;
+
+
+    document.querySelector('.container').appendChild(newWrapper);
+}
+</script>
 </body>
 </html>

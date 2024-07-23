@@ -1,50 +1,33 @@
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const helmet = require('helmet');
 const https = require('https');
-const fs = require('fs');
-const config = require('../config/config.js');
-require('dotenv').config();
+const http = require('http');
+const pem = require('pem');
+const express = require('express');
+const fs = require("mz/fs");
+const GracefulShutdownManager = require('@moebius/http-graceful-shutdown').GracefulShutdownManager;
 
-const utiity = require('../utils/encryption.js')
-const corsOptions = {
-  origin: 'https://localhost', // Allow requests from this origin
-  optionsSuccessStatus: 200
-};
-const app = express();
+(async () => {
+	const {key, cert} = await (async () => {
+		const certdir = (await fs.readdir("/etc/letsencrypt/live"))[0];
 
+		return {
+			key: await fs.readFile(`/etc/letsencrypt/live/${certdir}/privkey.pem`),
+			cert: await fs.readFile(`/etc/letsencrypt/live/${certdir}/fullchain.pem`)
+		}
+	})();
 
-app.use(helmet());
-app.use(cors(corsOptions));
-app.use(express.json());
+	const app = express()
 
+	app.get('/', function (req, res) {
+		res.send('o hai!')
+	})
 
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch((error) => console.error('Connection error:', error));
+	const httpsServer = https.createServer({key, cert}, app).listen(443)
 
-const cardRoutes = require('../routes/cardRoutes');
-app.use('/api/cards', cardRoutes);
+	const httpsShutdownManager = new GracefulShutdownManager(httpsServer);
 
-// Define a root route
-app.get('/', (req, res) => {
-  res.send('Welcome to the API');
-  console.log(utiity.decrypt("2e72d6f5dbf9a519cd9b31731975e544:12d07cf8bacef05d4375725ed2d0627d944d6d37aefdbbe21ac294b178990bc3"));
-
-  
-});
-
-const options = {
-  key: process.env.PRIVATE_KEY,
-  cert:process.env.CERTIFICATE
-};
-
-
-
-https.createServer(options, app).listen(config.port, () => {
-  console.log(`Server is running on https://localhost:${config.port}`);
-});
+	process.on('SIGTERM', () => {
+		httpsShutdownManager.terminate(() => {
+			console.log('Server is gracefully terminated');
+		});
+	});
+})();

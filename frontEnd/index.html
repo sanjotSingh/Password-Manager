@@ -1,22 +1,272 @@
 <!DOCTYPE html>
+<!-- @noSnoop -->
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Site Information Cards with Search and Add</title>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Vault</title>
+  <script type='text/javascript' src='/requirejs/config.js'></script>
+  <script type='text/javascript' src='/module/js/com/tridium/js/ext/require/require.min.js'></script>
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin: 20px;
+      width: calc(33.33% - 40px);
+      flex: 1 0 auto;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1.5rem;
+    }
+
+    .view-mode p {
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      font-size: 1rem;
+      color: #555;
+    }
+
+    .view-mode .password-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-password {
+      margin-left: 10px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #007bff;
+    }
+
+    .toggle-password:hover {
+      color: #0056b3;
+    }
+
+    .search-container {
+      max-width: 930px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .search-container input {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-right: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-container input:focus {
+      border-color: #007bff;
+    }
+
+    .add-btn {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .logout-btn {
+      background-color: gray;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: background-color 0.2s;
+    }
+
+    .add-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 80%;
+      margin: auto;
+      max-width: 500px;
+      animation: slide-down 0.3s ease-out;
+    }
+
+    @keyframes slide-down {
+      from {
+        transform: translateY(-20%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .field {
+      margin-bottom: 15px;
+    }
+
+    .field label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .field input, .field textarea {
+      width: calc(100% - 16px);
+      padding: 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin: 5px 0;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus, .field textarea:focus {
+      border-color: #007bff;
+    }
+
+    .save-btn, .cancel-btn {
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-right: 10px;
+    }
+
+    .cancel-btn {
+      background-color: #dc3545;
+    }
+
+    .save-btn:hover {
+      background-color: #218838;
+    }
+
+    .cancel-btn:hover {
+      background-color: #c82333;
+    }
+
+    .edit-btn {
+      background-color: #06B131;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .edit-btn:hover {
+      background-color: #138496;
+    }
+
+    .delete-btn {
+      background-color: #D02536;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-left: 10px;
+    }
+
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 800px) {
+      .card {
+        width: calc(50% - 40px);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+      .card {
+        width: calc(100% - 40px);
+        margin: 10px;
+      }
+      .field input, .field textarea {
+        font-size: 0.9rem;
+      }
+      .save-btn, .add-btn, .cancel-btn, .edit-btn, .delete-btn {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- Search Bar and Add Button -->
   <div class="search-container">
-    
     <input type="text" id="searchInput" placeholder="Search...">
     <button class="add-btn" onclick="openModal()">Add Card</button>
-    <button class="logout-btn" onclick="window.location.href='https://intechautomation.com/logoutConfirm';">logOut</button>
+    <button class="logout-btn" onclick="window.location.href='https://intechautomation.com/logoutConfirm';">Logout</button>
   </div>
   <div class="container" id="cardContainer"></div>
 
-  <!-- Modal for Adding New Card -->
   <div id="myModal" class="modal">
     <div class="modal-content">
       <h2>Add New Card</h2>
@@ -51,6 +301,373 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    // Fetch and display stored credentials
+    loadCards()
+        .then(data => {
+            // Ensure data is an array
+            if (Array.isArray(data)) {
+                //Sorting data alphabetically by siteName
+                data.sort((a, b) => a.siteName.localeCompare(b.siteName));
+                data.forEach(card => {
+                    displayCard(card);
+                });
+            } else {
+                console.error('Fetched data is not an array:', data);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching card data:', error);
+        });
+
+    function loadCards() {
+        return new Promise((resolve, reject) => {
+            require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
+                "use strict";
+
+                // Assuming you fetch data using baja!
+                baja.Ord.make('station:|slot:/Apps/TestBlock/getHTTP/out').get({
+                    lease: true, // Temporarily subscribe the Counter for one minute.
+                    leaseTime: baja.RelTime.make({
+                        minutes: 1
+                    })
+                })
+                .then(function(ramp) {
+                    return ramp.getParent().invoke({
+                            slot: "refresh"
+                    })
+                    .then(function() {
+                        var rampData = ramp.getValue();
+                        // Assuming rampData is already in JSON format or needs JSON parsing
+                        try {
+                        // Check if rampData is a string and parse it
+                        const jsonData = typeof rampData === 'string' ? JSON.parse(rampData) : rampData;
+                        resolve(jsonData);
+                        } catch (error) {
+                            reject(error); // Reject if parsing fails
+                        }
+                    });
+                })
+                .catch(function(error) {
+                    console.error("Error loading card data:", error);
+                    reject(error); // Reject the promise with the error
+                });
+            });
+        });
+    }
+    function displayCard(card) {
+        const cardContainer = document.getElementById('cardContainer');
+
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card';
+
+        const siteNameElement = document.createElement('h3');
+        siteNameElement.textContent = card.siteName;
+        cardElement.appendChild(siteNameElement);
+
+        const usernameElement = document.createElement('p');
+        usernameElement.textContent = `Username: ${card.username}`;
+        cardElement.appendChild(usernameElement);
+
+        const passwordElement = document.createElement('p');
+        const passwordContainer = document.createElement('span');
+        passwordContainer.className = 'password-container';
+        const passwordText = document.createElement('span');
+        passwordText.textContent = `Password: ${'•'.repeat(card.password.length)}`;
+
+        passwordContainer.appendChild(passwordText);
+
+        const togglePasswordButton = document.createElement('span');
+        togglePasswordButton.className = 'toggle-password';
+        togglePasswordButton.innerHTML = '🙈'; // eye icon
+
+        togglePasswordButton.addEventListener('click', () => {
+            if (passwordText.textContent === `Password: ${card.password}`) {
+                passwordText.textContent = `Password: ${'•'.repeat(card.password.length)}`;
+                togglePasswordButton.innerHTML = '🙈'; // show eye icon
+            } else {
+                passwordText.textContent = `Password: ${card.password}`;
+                togglePasswordButton.innerHTML = '🙉'; // hide eye icon
+            }
+        });
+
+        passwordContainer.appendChild(togglePasswordButton);
+        passwordElement.appendChild(passwordContainer);
+
+        cardElement.appendChild(passwordElement);
+
+        const internalIpElement = document.createElement('p');
+        internalIpElement.textContent = `Internal IP: ${card.internalIp}`;
+        cardElement.appendChild(internalIpElement);
+
+        const externalIpElement = document.createElement('p');
+        externalIpElement.textContent = `External IP: ${card.externalIp}`;
+        cardElement.appendChild(externalIpElement);
+
+        const notesElement = document.createElement('p');
+        notesElement.textContent = `Notes: ${card.notes}`;
+        cardElement.appendChild(notesElement);
+
+        const editButton = document.createElement('button');
+        editButton.className = 'edit-btn';
+        editButton.textContent = 'Edit';
+        editButton.addEventListener('click', () => {
+            openEditModal(card);
+        });
+        cardElement.appendChild(editButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'delete-btn';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => {
+            deleteCard(card._id, cardElement);
+        });
+        cardElement.appendChild(deleteButton);
+
+        cardContainer.appendChild(cardElement);
+    }
+    function openEditModal(card) {
+        const modal = document.getElementById('myModal');
+        document.getElementById('siteName').value = card.siteName;
+        document.getElementById('username').value = card.username;
+        document.getElementById('password').value = card.password;
+        document.getElementById('internalIp').value = card.internalIp;
+        document.getElementById('externalIp').value = card.externalIp;
+        document.getElementById('notes').value = card.notes;
+
+        const saveButton = document.querySelector('.save-btn');
+        saveButton.textContent = 'Update';
+        saveButton.onclick = () => updateCard(card._id);
+
+        modal.style.display = 'flex';
+    }
+    window.openModal = function() {
+        const modal = document.getElementById('myModal');
+
+        // Reset form fields
+        document.getElementById('siteName').value = '';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('internalIp').value = '';
+        document.getElementById('externalIp').value = '';
+        document.getElementById('notes').value = '';
+
+        modal.style.display = 'flex';
+    };
+    window.closeModal = function() {
+        const modal = document.getElementById('myModal');
+        modal.style.display = 'none';
+    };
+    window.addCard = function() {
+        const siteName = document.getElementById('siteName').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const internalIp = document.getElementById('internalIp').value;
+        const externalIp = document.getElementById('externalIp').value;
+        const notes = document.getElementById('notes').value;
+        postCard(JSON.stringify({
+                siteName,
+                username,
+                password,
+                internalIp,
+                externalIp,
+                notes
+            }))
+            .then(updatedCard => {
+                // Update the card in the DOM
+                const cardElements = document.querySelectorAll('.card');
+                cardElements.forEach(cardElement => {
+                    if (cardElement.querySelector('h3').textContent === updatedCard.siteName) {
+                        cardElement.querySelector('p:nth-child(2)').textContent = `Username: ${updatedCard.username}`;
+                        cardElement.querySelector('.password-container span').textContent = updatedCard.password;
+                        cardElement.querySelector('p:nth-child(4)').textContent = `Internal IP: ${updatedCard.internalIp}`;
+                        cardElement.querySelector('p:nth-child(5)').textContent = `External IP: ${updatedCard.externalIp}`;
+                        cardElement.querySelector('p:nth-child(6)').textContent = `Notes: ${updatedCard.notes}`;
+                    }
+                });
+                closeModal();
+            })
+            .catch(error => console.error('Error updating card:', error));
+    };
+    function postCard(cardData) {
+        return new Promise((resolve, reject) => {
+            require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
+                "use strict";
+
+                // Initialize counter as undefined initially
+                var counter;
+
+                baja.Ord.make("station:|slot:/Apps/TestBlock/postHTTP/dataIn")
+                    .get({
+                        lease: true, // Temporarily subscribe the Counter for one minute.
+                        leaseTime: baja.RelTime.make({
+                            minutes: 1
+                        })
+                    })
+                    .then(function(point) {
+                        counter = point; // Assign the fetched point to counter
+                        // Set value using cardData
+                        counter.setValue(cardData);
+                        // Invoke refresh and return the promise to ensure it completes before proceeding
+                        return counter.getParent().invoke({
+                            slot: "refresh"
+                        });
+                    })
+                    .then(function() {
+                        location.reload();
+                        resolve(cardData); // Resolve with cardData after refresh completes
+                    })
+                    .catch(function(error) {
+                        reject(error); // Reject if any error occurs
+                    });
+            });
+        });
+    }
+    function postUpdatedCard(cardData, id) {
+        return new Promise((resolve, reject) => {
+            require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
+                "use strict";
+
+                // Initialize counter as undefined initially
+                var counter;
+
+
+                baja.Ord.make("station:|slot:/Apps/TestBlock/putHTTP/dataIn")
+                    .get({
+                        lease: true, // Temporarily subscribe the Counter for one minute.
+                        leaseTime: baja.RelTime.make({
+                            minutes: 1
+                        })
+                    })
+                    .then(function(point) {
+                        counter = point; // Assign the fetched point to counter
+                        // Assuming getIn10() is a method on the fetched point
+                        return counter.setValue(cardData);
+                    })
+                    .then(function() {
+                        resolve(cardData);
+                    })
+                    .catch(function(error) {
+                        reject(error);
+                    });
+                baja.Ord.make("station:|slot:/Apps/TestBlock/putHTTP/Url")
+                    .get({
+                        lease: true, // Temporarily subscribe the Counter for one minute.
+                        leaseTime: baja.RelTime.make({
+                            minutes: 1
+                        })
+                    })
+                    .then(function(point) {
+                        counter = point; // Assign the fetched point to counter
+                        // Assuming getIn10() is a method on the fetched point
+                        counter.setValue(`https://localhost:5000/api/cards/${id}`);
+                        // Invoke refresh and return the promise to ensure it completes before proceeding
+                        return counter.getParent().invoke({
+                            slot: "refresh"
+                        });
+                    })
+                    .then(function() {
+                        location.reload();
+                        resolve(cardData);
+                    })
+                    .catch(function(error) {
+                        reject(error);
+                    });
+
+
+            });
+        });
+    }
+    function updateCard(id) {
+        const siteName = document.getElementById('siteName').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const internalIp = document.getElementById('internalIp').value;
+        const externalIp = document.getElementById('externalIp').value;
+        const notes = document.getElementById('notes').value;
+
+        postUpdatedCard(JSON.stringify({
+            siteName,
+            username,
+            password,
+            internalIp,
+            externalIp,
+            notes
+        }), id)
+        .then(updatedCard => {
+            // Update the card in the DOM
+            const cardElements = document.querySelectorAll('.card');
+            cardElements.forEach(cardElement => {
+                if (cardElement.querySelector('h3').textContent === updatedCard.siteName) {
+                    cardElement.querySelector('p:nth-child(2)').textContent = `Username: ${updatedCard.username}`;
+                    cardElement.querySelector('.password-container span').textContent = updatedCard.password;
+                    cardElement.querySelector('p:nth-child(4)').textContent = `Internal IP: ${updatedCard.internalIp}`;
+                    cardElement.querySelector('p:nth-child(5)').textContent = `External IP: ${updatedCard.externalIp}`;
+                    cardElement.querySelector('p:nth-child(6)').textContent = `Notes: ${updatedCard.notes}`;
+                }
+            });
+
+            closeModal();
+        })
+        .catch(error => console.error('Error updating card:', error));
+    }
+    function deleteCard(id, cardElement) {
+        return new Promise((resolve, reject) => {
+            require(['baja!', 'baja!program:ProgramAction'], function(baja, types) {
+                "use strict";
+
+                // Initialize counter as undefined initially
+                var counter;
+
+                baja.Ord.make("station:|slot:/Apps/TestBlock/deleteHTTP/Url")
+                    .get({
+                        lease: true, // Temporarily subscribe the Counter for one minute.
+                        leaseTime: baja.RelTime.make({
+                            minutes: 1
+                        })
+                    })
+                    .then(function(point) {
+                        counter = point; // Assign the fetched point to counter
+                        // Assuming getIn10() is a method on the fetched point
+                        counter.setValue(`https://localhost:5000/api/cards/${id}`); // Set value using cardData
+                        counter.getParent().invoke({
+                            slot: "refresh"
+                        });
+                    })
+                    .then(function() {
+                        cardElement.remove();
+                    })
+                    .catch(function(error) {
+                        reject(error);
+                    });
+            });
+        });
+    }
+
+    
+});
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchValue = this.value.toLowerCase();
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach(card => {
+        const cardTitle = card.querySelector('h3').textContent.toLowerCase();
+        const viewModeElements = card.querySelectorAll('.view-mode');
+
+        let viewModeText = '';
+        viewModeElements.forEach(element => {
+            viewModeText += element.textContent.toLowerCase();
+        });
+
+        if (cardTitle.includes(searchValue) || viewModeText.includes(searchValue)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+
+  </script>
 </body>
 </html>

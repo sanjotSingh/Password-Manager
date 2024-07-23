@@ -1,18 +1,21 @@
 Password manager to store sitename, user credentials and more.
 
 ## Tech Stack:
+Niagara N4 Workbench (apache server running a jetty web server)
 Node.js
-
 MongoDB
 
-## Setup:
+## Node Setup:
 **First Download Node.js and MongoDB**
 
 Run the following commands in the root folder:
 
 Install Dependencies: ```npm install ```
 
+set up for prod: ```npm install pm2@latest -g'''
+
 Run Backend: ```node server.js```
+
 
 The frontend is plain HTML and can be run by simply opening the html file.
 
@@ -26,3 +29,6 @@ ENCRYPTION_KEY = "key"
 PRIVATE_KEY = "private Key for ssl/tls"
 CERTIFICATE = "Certificate tof ssl/tls"
 ```
+
+## Communication pipeline
+All http requests flow through Niagara workbech. The webpage communicates with Niagara using Bajascript. The niagara workbench sends HTTP requests to the node server using the java program blocks. The node API communicates with the database and encrypts/decrypts incoming/oitgoing data.

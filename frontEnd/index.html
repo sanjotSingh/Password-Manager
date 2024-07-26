@@ -98,9 +98,10 @@ body {
 
 .wrapper {
   width: 350px;
+  overflow-x: visible;
   border-radius: 40px;
   background-image: var(--bg-shape-color);
-  overflow: auto;
+  
   margin: 18px;
   min-width: 350px;
   position: relative;
@@ -112,7 +113,12 @@ body {
 
 .overviewInfo {
   background-image: linear-gradient(176deg, var(--lightblue), var(--darkblue));
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
+
 
 .productinfo {
   display: flex;
@@ -152,10 +158,16 @@ h1 {
   background-image: var(--bg-shape-color);
   border-radius: 8px;
   margin-right: 16px;
-
   position: relative;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+.featureIcon img {
+  width: 30px;
+  height: 30px;
+}
+
 
 .productSpecifications h1 {
   margin-top: -10px;
@@ -163,22 +175,26 @@ h1 {
   font-size: 32px;
 }
 
-.productSpecifications p {
-  opacity: 0.8;
-  font-size: 15px;
-  line-height: 1.5;
-}
 
 .productFeatures {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Responsive columns */
   margin-top: 20px;
-  grid-row-gap: 16px;
+  grid-auto-rows: auto; /* Ensure rows adjust automatically */
 }
+
 
 .feature {
   display: flex;
+  padding-bottom:20px;
 }
+.feature p{
+  padding-bottom:5px;
+}
+
+
+
+
 
 #addCardButton {
   background-color: var(--lightblue);
@@ -200,6 +216,7 @@ h1 {
   padding: 20px;
   border-radius: 10px;
   margin-top: 20px;
+  z-index: 11;
   color: var(--text-color);
 }
 
@@ -252,6 +269,7 @@ h1 {
   font-size: 14px;
   border-radius: 8px;
   cursor: pointer;
+  z-index: 1; /* Ensure it has a higher z-index */
 }
 
 .editCardButton:hover {
@@ -408,9 +426,9 @@ document.getElementById('addCredentialButton').addEventListener('click', functio
 //edit button, J
 document.addEventListener('click', function(event) {
   if (event.target && event.target.classList.contains('editCardButton')) {
-    console.log('edit button clicked');
+    //console.log('edit button clicked');
     const card = event.target.parentElement;
-    const cardId = card.getAttribute('id').split('-')[1]; // Extract the id part after 'card-'
+    const cardId = card.getAttribute('id'); // Extract the id part after 'card-'
 
     document.getElementById('cardModal').style.display = 'block';
     document.getElementById('submitButton').innerText = 'Save';
@@ -421,8 +439,8 @@ document.addEventListener('click', function(event) {
     const siteName      = card.querySelector('.grouptext:nth-child(1) h1').innerText;
     const internalIp    = card.querySelector('.grouptext:nth-child(2) p a').innerText;
     const externalIp    = card.querySelector('.grouptext:nth-child(3) p a').innerText;
-    const notes         = card.querySelector('.grouptext:nth-child(3) p').innerText;
-    console.log(siteName, internalIp, externalIp, notes);
+    const notes         = card.querySelector('.grouptext:nth-child(4) p').innerText;
+    //console.log(siteName, internalIp, externalIp, notes);
     const credentialList = [];
     document.getElementById('siteName').value = siteName;
     document.getElementById('internalIP').value = internalIp;
@@ -482,7 +500,7 @@ document.getElementById('submitButton').addEventListener('click', function(event
 
   const credentialList = [];
   for (let i = 0; i < credentialTypes.length; i++) {
-    console.log(credentialTypes[i].value, credentialValues[i].value, credentialPasswords[i].value);
+    //console.log(credentialTypes[i].value, credentialValues[i].value, credentialPasswords[i].value);
     credentials.push({
       type: credentialTypes[i].value,
       value: credentialValues[i].value,
@@ -490,29 +508,30 @@ document.getElementById('submitButton').addEventListener('click', function(event
     });
   }
   const jsonString = JSON.stringify({siteName, internalIP, externalIP, notes, credentials});
-  console.log("Add Creds: "+ jsonString);
+  //console.log("Add Creds: "+ jsonString);
   const mode = document.getElementById('submitButton').dataset.mode;
 
   if (mode === 'add') {
+    //console.log("Adding Card");//we can get rid of code below, we can just refresh after adding and the card will display.
     const newWrapper = document.createElement('div');
     newWrapper.classList.add('wrapper');
     newWrapper.id = 'card-' + Date.now();
 
     let credentialsHtml = '';
     credentials.forEach(credential => {
-        //console.log(credential);
-      credentialsHtml += `
-        <div class="feature">
-          <div class="featureIcon"><span class="tooltiptext">${credential.password}</span></div>
-          <div class="featureText">
-            <p><strong>${credential.type}</strong></p>
-            <p>${credential.value}</p>
-          </div>
-        </div>
-      `;
-
+        credentialsHtml += `
+            <div class="feature">
+              <div class="featureIcon" onclick="copyToClipboard('${credential.password}', this)">
+                <img src="copyIcon.png" alt="Copy" class="copyIcon">
+                <span class="tooltiptext">${credential.password}</span>
+              </div>
+              <div class="featureText">
+                <p><strong>${credential.type}</strong></p>
+                <p>${credential.value}</p>
+              </div>
+            </div>
+        `;
     });
-
     newWrapper.innerHTML = `
       <button class="editCardButton" id="editCardButton">Edit</button>
       <div class="overviewInfo"> 
@@ -547,8 +566,11 @@ document.getElementById('submitButton').addEventListener('click', function(event
     postCard(jsonString);
 
   } else if (mode === 'edit') {
+    //console.log("Editing Card");
     const cardToEdit = document.getElementById('submitButton').dataset.cardId;
-    const card = document.getElementById('card-' + cardToEdit);
+    //console.log(cardToEdit);
+    const card = document.getElementById(cardToEdit);
+    //console.log(card);
     card.querySelector('.grouptext:nth-child(1) h1').innerText = siteName;
     card.querySelector('.grouptext:nth-child(2) p a').innerText = internalIP;
     card.querySelector('.grouptext:nth-child(2) p a').href = internalIP;
@@ -558,18 +580,22 @@ document.getElementById('submitButton').addEventListener('click', function(event
 
     let credentialsHtml = '';
     credentials.forEach(credential => {
-      credentialsHtml += `
-        <div class="feature">
-          <div class="featureIcon"><span class="tooltiptext">${credential.password}</span></div>
-          <div class="featureText">
-            <p><strong>${credential.type}</strong></p>
-            <p>${credential.value}</p>
-          </div>
-        </div>
-      `;
+        credentialsHtml += `
+            <div class="feature">
+              <div class="featureIcon" onclick="copyToClipboard('${credential.password}', this)">
+                <img src="copyIcon.png" alt="Copy" class="copyIcon">
+                <span class="tooltiptext">${credential.password}</span>
+              </div>
+              <div class="featureText">
+                <p><strong>${credential.type}</strong></p>
+                <p>${credential.value}</p>
+              </div>
+            </div>
+        `;
     });
 
     card.querySelector('.productFeatures').innerHTML = credentialsHtml;
+    //console.log(cardToEdit);
     updateCard(jsonString, cardToEdit);
   }
 
@@ -577,13 +603,12 @@ document.getElementById('submitButton').addEventListener('click', function(event
   document.getElementById('newCardForm').reset();
   const credentialsDiv = document.getElementById('credentials');
   credentialsDiv.innerHTML = '';
-  sortCards();
 });
 
 //Delete button J
 document.getElementById('deleteCardButton').addEventListener('click', function() {
   const cardToDelete = document.getElementById('submitButton').dataset.cardId;
-  const card = document.getElementById('card-' + cardToDelete);
+  const card = document.getElementById(cardToDelete);
   card.remove();
   document.getElementById('cardModal').style.display = 'none';
   deleteCard(cardToDelete);
@@ -683,7 +708,7 @@ function updateCard(cardData, id) {
                     });
                 })
                 .then(function() {
-                    location.reload();
+                    //location.reload();
                     resolve(cardData);
                 })
                 .catch(function(error) {
@@ -773,21 +798,22 @@ function displayCard(card) {
     }
     const newWrapper = document.createElement('div');
     newWrapper.classList.add('wrapper');
-    newWrapper.id = 'card-' + Date.now();
+    newWrapper.id = card._id;
 
     let credentialsHtml = '';
     credentials.forEach(credential => {
-        //console.log(credential);
-      credentialsHtml += `
-        <div class="feature">
-          <div class="featureIcon"><span class="tooltiptext">${credential.password}</span></div>
-          <div class="featureText">
-            <p><strong>${credential.type}</strong></p>
-            <p>${credential.value}</p>
-          </div>
-        </div>
-      `;
-
+        credentialsHtml += `
+            <div class="feature">
+              <div class="featureIcon" onclick="copyToClipboard('${credential.password}', this)">
+                <img src="copyIcon.png" alt="Copy" class="copyIcon">
+                <span class="tooltiptext">${credential.password}</span>
+              </div>
+              <div class="featureText">
+                <p><strong>${credential.type}</strong></p>
+                <p>${credential.value}</p>
+              </div>
+            </div>
+        `;
     });
 
     newWrapper.innerHTML = `
@@ -822,6 +848,35 @@ function displayCard(card) {
 
     document.querySelector('.container').appendChild(newWrapper);
 }
+function copyToClipboard(password, element) {
+    const tempInput = document.createElement("input");
+    document.body.appendChild(tempInput);
+    tempInput.value = password;
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+
+    // Show a temporary message
+    const tooltip = element.querySelector('.tooltiptext');
+    const originalText = tooltip.textContent;
+    tooltip.textContent = 'Copied!';
+    setTimeout(() => {
+        tooltip.textContent = originalText;
+    }, 2000); // Change back after 2 seconds
+}
+
+// Function to close the modal if clicked outside of it
+document.addEventListener('mousedown', function(event) {
+  var modal = document.querySelector('.modal');
+  var modalContent = document.querySelector('.modal-content');
+  
+  // Check if the click is outside the modal content
+  if (modal && !modalContent.contains(event.target)) {
+    modal.style.display = 'none';
+  }
+});
+
+
 </script>
 </body>
 </html>
